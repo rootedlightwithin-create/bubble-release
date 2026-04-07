@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bubble Release</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: radial-gradient(circle at bottom, #aeefff, #ffffff);
+  }
+
+  .bubble {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s ease-out, opacity 0.2s;
+  }
+
+  .pop {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+</style>
+</head>
+<body>
+
+<script>
+// 🌈 Colour shifts based on interaction
+let energy = 0;
+
+function getColour() {
+  // full visible range: blue → purple → pink → red → orange
+  const hue = (200 - energy + 360) % 360;
+  return `hsla(${hue}, 80%, 70%, 0.7)`;
+}
+
+function createBubble() {
+  const bubble = document.createElement("div");
+  const size = Math.random() * 60 + 20;
+
+  bubble.classList.add("bubble");
+  bubble.style.width = size + "px";
+  bubble.style.height = size + "px";
+  bubble.style.background = getColour();
+
+  bubble.style.left = Math.random() * window.innerWidth + "px";
+  bubble.style.top = window.innerHeight + "px";
+
+  document.body.appendChild(bubble);
+
+  let position = window.innerHeight;
+
+  const rise = setInterval(() => {
+    position -= 1;
+    bubble.style.top = position + "px";
+
+    if (position < -100) {
+      bubble.remove();
+      clearInterval(rise);
+    }
+  }, 20);
+
+  bubble.addEventListener("click", () => {
+    bubble.classList.add("pop");
+
+    // increase energy → warmer colours
+    energy = Math.min(300, energy + 15);
+
+    setTimeout(() => {
+      bubble.remove();
+      clearInterval(rise);
+    }, 200);
+  });
+}
+
+// energy slowly settles back down (calming effect)
+setInterval(() => {
+  energy = Math.max(0, energy - 0.5);
+}, 100);
+
+// create bubbles
+setInterval(createBubble, 500);
+
+// register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+
+</body>
+</html>
