@@ -32,6 +32,14 @@
 // 🌈 Colour shifts based on interaction
 let energy = 0;
 
+// Load pop sound (optional)
+let popSound;
+try {
+  popSound = new Audio('pop.mp3');
+} catch(e) {
+  console.log("No pop sound available");
+}
+
 function getColour() {
   // full visible range: blue → purple → pink → red → orange
   const hue = (200 - energy + 360) % 360;
@@ -40,14 +48,16 @@ function getColour() {
 
 function createBubble() {
   const bubble = document.createElement("div");
-  const size = Math.random() * 60 + 20;
 
+  // Bigger size: 40px → 120px
+  const size = Math.random() * 80 + 40;
   bubble.classList.add("bubble");
   bubble.style.width = size + "px";
   bubble.style.height = size + "px";
   bubble.style.background = getColour();
 
-  bubble.style.left = Math.random() * window.innerWidth + "px";
+  // Random horizontal position, start at bottom
+  bubble.style.left = Math.random() * (window.innerWidth - size) + "px";
   bubble.style.top = window.innerHeight + "px";
 
   document.body.appendChild(bubble);
@@ -67,7 +77,13 @@ function createBubble() {
   bubble.addEventListener("click", () => {
     bubble.classList.add("pop");
 
-    // increase energy → warmer colours
+    // Play pop sound if available
+    if (popSound) {
+      popSound.currentTime = 0;
+      popSound.play();
+    }
+
+    // Increase energy → warmer colours
     energy = Math.min(300, energy + 15);
 
     setTimeout(() => {
