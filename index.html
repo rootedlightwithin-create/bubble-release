@@ -40,12 +40,13 @@ try {
   console.log("No pop sound available");
 }
 
+// Returns bubble color based on energy
 function getColour() {
-  // full visible range: blue → purple → pink → red → orange
   const hue = (200 - energy + 360) % 360;
   return `hsla(${hue}, 80%, 70%, 0.7)`;
 }
 
+// Create a bubble with smooth animation
 function createBubble() {
   const bubble = document.createElement("div");
 
@@ -56,36 +57,53 @@ function createBubble() {
   bubble.style.height = size + "px";
   bubble.style.background = getColour();
 
-  // Random horizontal position, start at bottom
-  bubble.style.left = Math.random() * (window.innerWidth - size) + "px";
+  // Random horizontal start
+  const startX = Math.random() * (window.innerWidth - size);
+  bubble.style.left = startX + "px";
   bubble.style.top = window.innerHeight + "px";
 
   document.body.appendChild(bubble);
 
-  let position = window.innerHeight;
+  // Animation variables
+  let posY = window.innerHeight;
+  const speed = Math.random() * 2 + 1;          // Vertical speed
+  const rotation = Math.random() * 2 - 1;       // Rotation per frame
+
+  // Drift side-to-side like floating bubble
+  const driftAmplitude = Math.random() * 20 + 10;   // Max horizontal oscillation
+  const driftFrequency = Math.random() * 0.05 + 0.02; // Speed of oscillation
+  const driftOffset = Math.random() * 2 * Math.PI;  // Phase shift
 
   const rise = setInterval(() => {
-    position -= 1;
-    bubble.style.top = position + "px";
+    posY -= speed;
+    bubble.style.top = posY + "px";
 
-    if (position < -100) {
+    // Smooth side-to-side drift
+    const offsetX = driftAmplitude * Math.sin(driftFrequency * posY + driftOffset);
+    bubble.style.left = startX + offsetX + "px";
+
+    // Rotation
+    const currentRotation = bubble._rotation || 0;
+    bubble._rotation = currentRotation + rotation;
+    bubble.style.transform = `rotate(${bubble._rotation}deg)`;
+
+    // Fade out as it rises
+    bubble.style.opacity = Math.max(0, (window.innerHeight - posY) / window.innerHeight);
+
+    if (posY < -100) {
       bubble.remove();
       clearInterval(rise);
     }
   }, 20);
 
+  // Pop bubble on click
   bubble.addEventListener("click", () => {
     bubble.classList.add("pop");
-
-    // Play pop sound if available
     if (popSound) {
       popSound.currentTime = 0;
       popSound.play();
     }
-
-    // Increase energy → warmer colours
     energy = Math.min(300, energy + 15);
-
     setTimeout(() => {
       bubble.remove();
       clearInterval(rise);
@@ -93,15 +111,18 @@ function createBubble() {
   });
 }
 
-// energy slowly settles back down (calming effect)
+// Energy slowly settles back down (calming effect)
 setInterval(() => {
   energy = Math.max(0, energy - 0.5);
 }, 100);
 
-// create bubbles
+// Continuously create bubbles
 setInterval(createBubble, 500);
 
-// register service worker
+// Some bubbles on load
+for (let i = 0; i < 10; i++) createBubble();
+
+// Register service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
